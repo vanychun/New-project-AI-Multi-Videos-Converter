@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🔄 Refresh Electron App</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            padding: 50px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+        }
+        button { 
+            background: linear-gradient(45deg, #2196f3, #21cbf3);
+            color: white; 
+            border: none; 
+            padding: 15px 30px; 
+            font-size: 18px;
+            border-radius: 25px; 
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+        }
+        button:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            background: rgba(0,0,0,0.2);
+        }
+        h1 { text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Electron App Stuck on Loading</h1>
+        <p>The Vite dev server is running but Electron needs to reconnect.</p>
+        
+        <div class="status" id="status">
+            Click the button below to refresh the Electron app.
+        </div>
+        
+        <button onclick="refreshElectron()">🔄 REFRESH ELECTRON APP</button>
+        <button onclick="openInBrowser()">🌐 OPEN IN BROWSER (FALLBACK)</button>
+        
+        <div style="margin-top: 30px; font-size: 14px; opacity: 0.8;">
+            <h3>Manual Steps:</h3>
+            <ol style="text-align: left;">
+                <li>In Electron app: Press <strong>Ctrl + R</strong> to refresh</li>
+                <li>Or press <strong>F5</strong> to reload</li>
+                <li>If still stuck: Close Electron completely and restart</li>
+                <li>Fallback: Use browser at <a href="http://localhost:3000" style="color: #ffeb3b;">http://localhost:3000</a></li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function refreshElectron() {
+            const status = document.getElementById('status');
+            status.innerHTML = '🔄 Attempting to refresh Electron app...';
+            
+            try {
+                // Try to reload if we're in Electron
+                if (window.electronAPI || window.require) {
+                    window.location.reload();
+                    status.innerHTML = '✅ Electron app refreshed!';
+                } else {
+                    // We're in a browser, open the main app
+                    window.open('http://localhost:3000', '_blank');
+                    status.innerHTML = '🌐 Opened in new tab (not in Electron)';
+                }
+            } catch (error) {
+                status.innerHTML = '❌ Error: ' + error.message;
+            }
+        }
+        
+        function openInBrowser() {
+            window.open('http://localhost:3000', '_blank');
+            document.getElementById('status').innerHTML = '🌐 Opened in browser tab - you can test there!';
+        }
+        
+        // Auto-check connection
+        window.addEventListener('load', () => {
+            fetch('http://localhost:3000')
+                .then(response => {
+                    if (response.ok) {
+                        document.getElementById('status').innerHTML = '✅ Vite dev server is running on port 3000';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('status').innerHTML = '❌ Vite dev server not responding';
+                });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🔍 Video Preview Debug</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .debug-section { 
+            background: #2a2a2a; 
+            border: 1px solid #444;
+            padding: 20px; 
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 5px; 
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .error { background: #dc3545; }
+        .success { background: #28a745; }
+        .warning { background: #ffc107; color: black; }
+        video { max-width: 100%; height: 300px; background: #000; }
+        pre { background: #333; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Video Preview Debug Tool</h1>
+    
+    <div class="debug-section">
+        <h2>📋 Console Monitoring</h2>
+        <p>Check browser console (F12) for detailed logs when importing videos.</p>
+        <p><strong>Look for these log messages:</strong></p>
+        <ul>
+            <li>🎬 Video source changed</li>
+            <li>🔧 Path conversion</li>
+            <li>🎬 Video load error</li>
+        </ul>
+    </div>
+
+    <div class="debug-section">
+        <h2>🧪 Video URL Format Tests</h2>
+        <p>These tests will help identify which video URL format works in Electron:</p>
+        
+        <div id="test-results"></div>
+        
+        <button onclick="testVideoFormats()">🔬 Test Video URL Formats</button>
+        <button onclick="checkElectronAPIs()">🔧 Check Electron APIs</button>
+    </div>
+
+    <div class="debug-section">
+        <h2>📹 Test Video Element</h2>
+        <p>Test video element to see actual loading behavior:</p>
+        <video id="test-video" controls>
+            <source src="" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <br>
+        <input type="file" id="file-input" accept="video/*" onchange="testVideoFile(this)">
+        <br>
+        <div id="video-info"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>📊 Redux State Inspection</h2>
+        <button onclick="inspectReduxState()">🔍 Check Redux Videos</button>
+        <div id="redux-info"></div>
+    </div>
+
+    <script>
+        function testVideoFormats() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h3>Testing different video URL formats...</h3>';
+            
+            // Test 1: Check if we're in Electron
+            const isElectron = !!(window.electronAPI || window.require);
+            results.innerHTML += `<div class="test-result ${isElectron ? 'success' : 'warning'}">
+                Electron Environment: ${isElectron ? '✅ YES' : '❌ NO (Browser)'}
+            </div>`;
+            
+            // Test 2: Check file:// support
+            const testVideo = document.createElement('video');
+            testVideo.oncanplay = () => {
+                results.innerHTML += '<div class="test-result success">✅ file:// URLs supported</div>';
+            };
+            testVideo.onerror = (e) => {
+                results.innerHTML += `<div class="test-result error">❌ file:// URLs failed: ${e.target.error?.message || 'Unknown error'}</div>`;
+            };
+            
+            // Test with a dummy file:// URL
+            setTimeout(() => {
+                results.innerHTML += '<div class="test-result warning">⚠️ file:// test requires actual file path</div>';
+            }, 1000);
+        }
+        
+        function checkElectronAPIs() {
+            const results = document.getElementById('test-results');
+            
+            if (window.electronAPI) {
+                results.innerHTML += '<div class="test-result success">✅ electronAPI available</div>';
+                
+                if (window.electronAPI.selectFiles) {
+                    results.innerHTML += '<div class="test-result success">✅ selectFiles method available</div>';
+                } else {
+                    results.innerHTML += '<div class="test-result error">❌ selectFiles method missing</div>';
+                }
+                
+                // List all available methods
+                const methods = Object.keys(window.electronAPI);
+                results.innerHTML += `<div class="test-result">Available methods: ${methods.join(', ')}</div>`;
+                
+            } else {
+                results.innerHTML += '<div class="test-result error">❌ electronAPI not available</div>';
+            }
+        }
+        
+        function testVideoFile(input) {
+            const file = input.files[0];
+            const video = document.getElementById('test-video');
+            const info = document.getElementById('video-info');
+            
+            if (file) {
+                // Test blob URL
+                const blobUrl = URL.createObjectURL(file);
+                video.src = blobUrl;
+                
+                info.innerHTML = `
+                    <h4>File Info:</h4>
+                    <p><strong>Name:</strong> ${file.name}</p>
+                    <p><strong>Size:</strong> ${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                    <p><strong>Type:</strong> ${file.type}</p>
+                    <p><strong>Blob URL:</strong> ${blobUrl}</p>
+                `;
+                
+                video.onloadedmetadata = () => {
+                    info.innerHTML += `
+                        <div class="test-result success">
+                            ✅ Video loaded successfully!<br>
+                            Duration: ${video.duration.toFixed(2)}s<br>
+                            Dimensions: ${video.videoWidth}x${video.videoHeight}
+                        </div>
+                    `;
+                };
+                
+                video.onerror = (e) => {
+                    const error = video.error;
+                    let errorMsg = 'Unknown error';
+                    if (error) {
+                        switch (error.code) {
+                            case error.MEDIA_ERR_ABORTED: errorMsg = 'Loading aborted'; break;
+                            case error.MEDIA_ERR_NETWORK: errorMsg = 'Network error'; break;
+                            case error.MEDIA_ERR_DECODE: errorMsg = 'Decode error'; break;
+                            case error.MEDIA_ERR_SRC_NOT_SUPPORTED: errorMsg = 'Format not supported'; break;
+                        }
+                    }
+                    
+                    info.innerHTML += `
+                        <div class="test-result error">
+                            ❌ Video failed to load: ${errorMsg}
+                        </div>
+                    `;
+                };
+            }
+        }
+        
+        function inspectReduxState() {
+            const info = document.getElementById('redux-info');
+            
+            if (typeof window.getReduxState === 'function') {
+                const state = window.getReduxState();
+                const videos = state?.videos?.videos || [];
+                
+                info.innerHTML = `
+                    <h4>Redux Videos (${videos.length}):</h4>
+                    <pre>${JSON.stringify(videos, null, 2)}</pre>
+                `;
+                
+                if (videos.length > 0) {
+                    videos.forEach((video, index) => {
+                        info.innerHTML += `
+                            <div class="test-result">
+                                <strong>Video ${index + 1}:</strong> ${video.name}<br>
+                                <strong>Path:</strong> ${video.path}<br>
+                                <strong>Format:</strong> ${video.format}
+                            </div>
+                        `;
+                    });
+                }
+            } else {
+                info.innerHTML = '<div class="test-result error">❌ Redux debug tools not available</div>';
+            }
+        }
+        
+        // Auto-run initial tests
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                testVideoFormats();
+                checkElectronAPIs();
+            }, 500);
+        });
+    </script>
+</body>
+</html>

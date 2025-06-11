@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🔒 CSP Fix Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 50px auto; 
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-box { 
+            background: #2a2a2a; 
+            border: 2px solid #007bff; 
+            padding: 30px; 
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .success { border-color: #28a745; background: #1e4a2e; }
+        .error { border-color: #dc3545; background: #4a1e1e; }
+        .warning { border-color: #ffc107; background: #4a3a1e; }
+        button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 15px 30px; 
+            font-size: 16px;
+            border-radius: 5px; 
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover { background: #0056b3; }
+        pre { background: #333; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        h1 { color: #007bff; text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>🔒 Content Security Policy Fix Test</h1>
+    
+    <div class="test-box">
+        <h2>✅ CSP Fix Applied</h2>
+        <p><strong>Changes Made:</strong></p>
+        <ul style="text-align: left;">
+            <li>🔧 Disabled CSP headers in development mode</li>
+            <li>🔒 Electron webSecurity: false already set</li>
+            <li>📁 Added file: protocol support to CSP</li>
+            <li>🎬 Added media-src directive for video files</li>
+        </ul>
+    </div>
+
+    <div class="test-box warning">
+        <h2>📋 Test Instructions</h2>
+        <ol style="text-align: left;">
+            <li><strong>Refresh Electron App</strong> - Press Ctrl+R in the main app</li>
+            <li><strong>Import a Video</strong> - Click Import Videos button</li>
+            <li><strong>Check Console</strong> - Look for CSP errors (should be gone)</li>
+            <li><strong>Video Preview</strong> - Timeline should show video instead of "Failed to load"</li>
+        </ol>
+    </div>
+
+    <div class="test-box">
+        <h2>🔍 CSP Status Check</h2>
+        <button onclick="checkCSP()">Check Current CSP</button>
+        <button onclick="testFileAccess()">Test File Access</button>
+        <div id="csp-result" style="margin-top: 20px;"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>🎬 Direct Video Test</h2>
+        <p>Test if file:// URLs work directly:</p>
+        <input type="file" id="file-input" accept="video/*" onchange="testDirectVideo(this)">
+        <video id="test-video" controls style="width: 100%; max-width: 500px; margin-top: 10px; display: none;"></video>
+        <div id="video-result"></div>
+    </div>
+
+    <script>
+        function checkCSP() {
+            const result = document.getElementById('csp-result');
+            
+            // Check if CSP is active
+            const meta = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+            const hasCSP = !!meta;
+            
+            // Check response headers (if available)
+            fetch(window.location.href)
+                .then(response => {
+                    const cspHeader = response.headers.get('content-security-policy');
+                    
+                    result.innerHTML = `
+                        <h3>CSP Status:</h3>
+                        <p><strong>Meta CSP:</strong> ${hasCSP ? '⚠️ Present' : '✅ None'}</p>
+                        <p><strong>Header CSP:</strong> ${cspHeader ? '⚠️ Present' : '✅ None'}</p>
+                        ${cspHeader ? `<pre>CSP: ${cspHeader}</pre>` : '<p style="color: #28a745;">✅ No CSP headers - file:// access should work!</p>'}
+                    `;
+                })
+                .catch(error => {
+                    result.innerHTML = `<p style="color: #dc3545;">❌ Could not check headers: ${error.message}</p>`;
+                });
+        }
+        
+        function testFileAccess() {
+            const result = document.getElementById('csp-result');
+            
+            // Test if we can access file:// (this will likely fail in browser, but shows if CSP blocks it)
+            const testUrl = 'file:///test.txt';
+            
+            fetch(testUrl)
+                .then(response => {
+                    result.innerHTML += '<p style="color: #28a745;">✅ file:// access allowed!</p>';
+                })
+                .catch(error => {
+                    if (error.message.includes('CORS') || error.message.includes('Cross-Origin')) {
+                        result.innerHTML += '<p style="color: #ffc107;">⚠️ CORS restriction (normal for file://)</p>';
+                    } else if (error.message.includes('Content Security Policy')) {
+                        result.innerHTML += '<p style="color: #dc3545;">❌ CSP is still blocking file:// access</p>';
+                    } else {
+                        result.innerHTML += `<p style="color: #6c757d;">ℹ️ ${error.message}</p>`;
+                    }
+                });
+        }
+        
+        function testDirectVideo(input) {
+            const file = input.files[0];
+            const video = document.getElementById('test-video');
+            const result = document.getElementById('video-result');
+            
+            if (file) {
+                // Create blob URL and test
+                const blobUrl = URL.createObjectURL(file);
+                video.src = blobUrl;
+                video.style.display = 'block';
+                
+                video.onloadedmetadata = () => {
+                    result.innerHTML = `
+                        <div style="color: #28a745; margin-top: 10px;">
+                            ✅ <strong>Video Loaded Successfully!</strong><br>
+                            Duration: ${video.duration.toFixed(2)}s<br>
+                            Size: ${video.videoWidth}x${video.videoHeight}<br>
+                            Blob URL: ${blobUrl}
+                        </div>
+                    `;
+                };
+                
+                video.onerror = (e) => {
+                    const error = video.error;
+                    let errorMsg = 'Unknown error';
+                    if (error) {
+                        switch (error.code) {
+                            case error.MEDIA_ERR_ABORTED: errorMsg = 'Loading aborted'; break;
+                            case error.MEDIA_ERR_NETWORK: errorMsg = 'Network error'; break;
+                            case error.MEDIA_ERR_DECODE: errorMsg = 'Decode error'; break;
+                            case error.MEDIA_ERR_SRC_NOT_SUPPORTED: errorMsg = 'Format not supported'; break;
+                        }
+                    }
+                    
+                    result.innerHTML = `
+                        <div style="color: #dc3545; margin-top: 10px;">
+                            ❌ <strong>Video Failed:</strong> ${errorMsg}<br>
+                            This might indicate CSP or security restrictions.
+                        </div>
+                    `;
+                };
+                
+                result.innerHTML = '<p style="color: #007bff;">🔄 Testing video load...</p>';
+            }
+        }
+        
+        // Auto-check CSP on load
+        window.addEventListener('load', () => {
+            setTimeout(checkCSP, 500);
+        });
+    </script>
+</body>
+</html>

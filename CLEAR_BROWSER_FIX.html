@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🔧 CLEAR BROWSER DATA - Fix Video Issue</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 50px auto; 
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .fix-box { 
+            background: #fff; 
+            border: 2px solid #dc3545; 
+            padding: 30px; 
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .warning { 
+            background-color: #fff3cd; 
+            border: 1px solid #ffeaa7; 
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        button { 
+            background: #dc3545; 
+            color: white; 
+            border: none; 
+            padding: 15px 30px; 
+            font-size: 18px; 
+            border-radius: 5px; 
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover { background: #c82333; }
+        .success { background: #d4edda; color: #155724; }
+        .step { margin: 15px 0; padding: 15px; background: #e7f3ff; border-left: 4px solid #0078d4; }
+    </style>
+</head>
+<body>
+    <div class="fix-box">
+        <h1>🚨 URGENT FIX: Clear Browser Data</h1>
+        
+        <div class="warning">
+            <strong>⚠️ PROBLEM IDENTIFIED:</strong><br>
+            The phantom video you see is from browser cache/storage or an extension.<br>
+            Redux state correctly shows 0 videos - the UI should match.
+        </div>
+
+        <div class="step">
+            <h3>Step 1: Clear All Browser Data</h3>
+            <button onclick="clearAll()">🧹 CLEAR ALL DATA NOW</button>
+            <div id="clear-result"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 2: Force Refresh App</h3>
+            <button onclick="forceRefresh()">🔄 FORCE REFRESH APP</button>
+        </div>
+
+        <div class="step">
+            <h3>Step 3: Manual Instructions</h3>
+            <p><strong>If automated clearing doesn't work:</strong></p>
+            <ol>
+                <li>Press <code>Ctrl + Shift + Delete</code></li>
+                <li>Select "All time" from dropdown</li>
+                <li>Check ALL boxes (Cache, Storage, Cookies, etc.)</li>
+                <li>Click "Clear data"</li>
+                <li>Close and restart the Electron app</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h3>Step 4: Disable Extensions</h3>
+            <p>If you're testing in a browser (not Electron):</p>
+            <ol>
+                <li>Open Chrome/Edge extensions page</li>
+                <li>Disable ALL extensions temporarily</li>
+                <li>Try incognito/private mode</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function clearAll() {
+            const result = document.getElementById('clear-result');
+            try {
+                // Clear all storage
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                // Clear IndexedDB
+                if ('indexedDB' in window) {
+                    indexedDB.databases().then(databases => {
+                        databases.forEach(db => {
+                            indexedDB.deleteDatabase(db.name);
+                        });
+                    });
+                }
+                
+                // Clear any cached URLs
+                if ('caches' in window) {
+                    caches.keys().then(names => {
+                        names.forEach(name => {
+                            caches.delete(name);
+                        });
+                    });
+                }
+                
+                result.innerHTML = '✅ Browser data cleared! Now close the app and restart it.';
+                result.className = 'success';
+                
+                // Show additional instructions
+                setTimeout(() => {
+                    result.innerHTML += '<br><br><strong>NEXT:</strong> Close the Electron app completely and restart it.';
+                }, 1000);
+                
+            } catch (error) {
+                result.innerHTML = '❌ Error: ' + error.message;
+            }
+        }
+        
+        function forceRefresh() {
+            // Clear everything one more time
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            // Force reload
+            window.location.reload(true);
+        }
+    </script>
+</body>
+</html>

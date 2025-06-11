@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>React Test - Direct</title>
+    <style>
+        body {
+            background: #1a1a1a;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        #test-root {
+            background: #2d2d47;
+            padding: 20px;
+            border: 2px solid #7461ef;
+            border-radius: 10px;
+            margin: 20px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: #28a745; }
+        .error { background: #dc3545; }
+        .info { background: #17a2b8; }
+    </style>
+</head>
+<body>
+    <h1>React App Debug Test</h1>
+    <div id="test-root">
+        <div class="status info">Loading React...</div>
+    </div>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <script>
+        const { createElement: h } = React;
+        const root = document.getElementById('test-root');
+        
+        try {
+            // Simple React component
+            const TestApp = () => {
+                return h('div', { style: { padding: '20px' } }, [
+                    h('h2', { key: 'title', style: { color: '#7461ef' } }, '✅ React is Working!'),
+                    h('p', { key: 'p1' }, 'This proves React can render in your browser.'),
+                    h('p', { key: 'p2' }, 'The issue with the main app might be:'),
+                    h('ul', { key: 'list' }, [
+                        h('li', { key: 'li1' }, 'A browser extension interfering with React apps'),
+                        h('li', { key: 'li2' }, 'Something hijacking the #root element'),
+                        h('li', { key: 'li3' }, 'A conflict with local development')
+                    ]),
+                    h('div', { key: 'actions', style: { marginTop: '20px' } }, [
+                        h('a', { 
+                            href: '/', 
+                            style: { 
+                                padding: '10px 20px', 
+                                background: '#7461ef', 
+                                color: 'white', 
+                                textDecoration: 'none',
+                                borderRadius: '5px',
+                                display: 'inline-block'
+                            } 
+                        }, 'Try Main App Again'),
+                        h('p', { style: { marginTop: '20px', fontSize: '14px', color: '#aaa' } }, 
+                          'If the main app shows "Video Multi-Converter Pro", try disabling browser extensions or using incognito mode.'
+                        )
+                    ])
+                ]);
+            };
+            
+            // Render with React 18
+            const domRoot = ReactDOM.createRoot(root);
+            domRoot.render(h(TestApp));
+            
+        } catch (error) {
+            root.innerHTML = `
+                <div class="status error">
+                    <h3>React Failed to Load</h3>
+                    <pre>${error.message}</pre>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
