@@ -1,0 +1,73 @@
+.file-import-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.file-import-button:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.file-import-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.file-import-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.import-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.import-text {
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* Loading state */
+.file-import-button.loading {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.file-import-button.loading .import-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .file-import-button {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+  
+  .import-icon {
+    font-size: 16px;
+  }
+}
